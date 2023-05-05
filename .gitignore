@@ -1,3 +1,5 @@
 .vscode
 credentials.json
 token.json
+*.html
+

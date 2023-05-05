@@ -1,8 +1,10 @@
 from __future__ import print_function
 
+import base64
 import os.path
-import pprint
+from pprint import pprint
 import requests
+import subprocess
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -15,9 +17,6 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
 def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -43,29 +42,60 @@ def main():
         results = service.users().labels().list(userId=user_id).execute()
         labels = results.get("labels", [])
 
-        if not labels:
-            print("No labels found.")
-            return
-        print("Labels:")
-        for label in labels:
-            print(label["name"])
-
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
         print(f"An error occurred: {error}")
 
     user_id = "anshchaturvedi23@gmail.com"
     headers = {
-        "Authorization": "Bearer ya29.a0AWY7CkmaK2Cgp2PtdL0jxG7Eih_G4WhQoZGPAAbf7dwkhXomtIQ9AsxYPf_wI3HfsCJRgR81Elr_vuWcl_L_5kKF2V9BZeLhwdblKequkgpFAEHMalTuwj2m8vF0v3ghXBJ2D7Hw-_oTD_sGvjTv05fYEKq-aCgYKAV4SARASFQG1tDrpZO23bSpVPCW9xoZOVIbpGA0163",
+        "Authorization": f"Bearer {creds.token}",
         "Accept": "application/json",
     }
+    max_results = 5
+    query = "q=%5B%20in%3Ainbox%20-category%3A%7Bsocial%20promotions%20forums%7D%20%5D"
 
     response = requests.get(
-        f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages",
-        headers=headers,
-    )
-    pprint.pprint(response.json())
+        f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages?maxResults={max_results}&q=category:primary",
 
+        headers=headers,
+    ).json()["messages"]
+
+    parts_count = 0
+    body_count = 0
+
+    for idx, message in enumerate(response):
+        message_id = message["id"]
+        print(f"message_id: {message_id}")
+        response_format = "full"
+        response = requests.get(
+            f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages/{message_id}?format={response_format}",
+            headers=headers,
+        ).json()
+        mime_type = response["payload"]["mimeType"]
+        print(f"mimeType: {mime_type}")
+        print(f"labelIds: {response['labelIds']}")
+        print("-------------------")
+
+
+        if "parts" in response["payload"] and mime_type == "multipart/alternative":
+            for p in response["payload"]["parts"]:
+                if p["mimeType"] in ["text/plain", "text/html"]:
+                    data = base64.urlsafe_b64decode(p["body"]["data"]).decode("utf-8")
+                    f = open(f"test{idx}.html", "a")
+                    f.write(data)
+                    f.close()
+                    parts_count += 1
+
+        # this is when the message is not multipart
+        else:
+            a = response["payload"]["body"]["data"]
+            data = base64.urlsafe_b64decode(a).decode("utf-8")
+            f = open(f"test{idx}.html", "a")
+            f.write(data)
+            f.close()
+            body_count += 1
+        
+    print(f"parts_count: {parts_count}, body_count: {body_count}")
 
 if __name__ == "__main__":
     main()
