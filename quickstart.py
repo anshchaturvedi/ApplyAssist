@@ -61,7 +61,8 @@ def main():
     }
 
     response = requests.get(
-        f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages", headers=headers
+        f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages",
+        headers=headers,
     )
     pprint.pprint(response.json())
 

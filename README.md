@@ -1,7 +1,9 @@
 # ApplyAssist
+
 An automated job application tracker which scans your emails!
 
 Try it like so:
+
 ```
 python3 quickstart.py
 ```
