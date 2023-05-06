@@ -4,6 +4,7 @@ import base64
 import os.path
 from pprint import pprint
 import requests
+import time
 import subprocess
 
 from google.auth.transport.requests import Request
@@ -17,6 +18,9 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
 def main():
+    # delete all the test files
+    subprocess.call("rm test*.html", shell=True)
+
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -45,6 +49,8 @@ def main():
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
         print(f"An error occurred: {error}")
+
+    start_time = time.time()
 
     user_id = "anshchaturvedi23@gmail.com"
     headers = {
@@ -75,9 +81,10 @@ def main():
         print(f"mimeType: {mime_type}")
         print(f"labelIds: {response['labelIds']}")
         print("-------------------")
+        mime_types = ["multipart/alternative", "multipart/mixed"]
 
 
-        if "parts" in response["payload"] and mime_type == "multipart/alternative":
+        if mime_type in mime_types:
             for p in response["payload"]["parts"]:
                 if p["mimeType"] in ["text/plain", "text/html"]:
                     data = base64.urlsafe_b64decode(p["body"]["data"]).decode("utf-8")
@@ -95,7 +102,9 @@ def main():
             f.close()
             body_count += 1
         
+    end_time = time.time()
     print(f"parts_count: {parts_count}, body_count: {body_count}")
+    print(f"Time taken: {end_time - start_time}")
 
 if __name__ == "__main__":
     main()
