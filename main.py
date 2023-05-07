@@ -10,26 +10,42 @@ import time
 
 from googleapiclient.discovery import build
 
+
 def main():
-    MAX_RESULTS = int(sys.argv[1])
-
-    USER_ID = "me"
-    test_directory = "test_files"
-
-    # delete all the test files
-    subprocess.call(f"rm -rf {test_directory}", shell=True)
-
-    os.makedirs(test_directory, exist_ok=True)
+    rejections = "(thank you AND regret) OR (thank you AND unfortunately) -{resident services, ppl, support, richa, change.org, energy, pr, michelle, rent, tldr, network, quora, cnet, medium, aliexpress, liz, parkrun, sheridan}) "
+    acknowledgements = "received your application -{nathan, monster, shein, romwe, linkedin, uber, tim hortons, oil, skillshare, network, quora, cnet, medium, aliexpress, liz, parkrun, sheridan}"
+    neither = "category:primary"
+    user_id = "me"
 
     creds = credentials.get_credentials()
 
-    start_time = time.time()
     service = build("gmail", "v1", credentials=creds)
+
+    # get_and_save_messages(
+    #     service, user_id, 32, rejections, "full", "rejections"
+    # )
+    # get_and_save_messages(
+    #     service, user_id, 32, acknowledgements, "full", "acknowledgements"
+    # )
+
+    # get_and_save_messages(service, user_id, 32, neither, "full", "neither")
+
+
+def get_and_save_messages(
+    service, user_id, max_results, query, response_format, directory
+) -> None:
+    """
+    Gets the messages from the Gmail API and saves them to the test_files directory.
+    """
+    start_time = time.time()
+
+    subprocess.call(f"rm -rf {directory}", shell=True)
+    os.makedirs(directory, exist_ok=True)
 
     results = (
         service.users()
         .messages()
-        .list(userId=USER_ID, maxResults=MAX_RESULTS, q="category:primary")
+        .list(userId=user_id, maxResults=max_results, q=query)
         .execute()
     )
     messages = results.get("messages", [])
@@ -45,11 +61,13 @@ def main():
         response = (
             service.users()
             .messages()
-            .get(userId=USER_ID, id=message["id"], format=response_format)
+            .get(userId=user_id, id=message["id"], format=response_format)
             .execute()
         )
         mime_type = response["payload"]["mimeType"]
-        file_path = os.path.join(test_directory, f"test{idx}.html")
+        file_path = os.path.join(directory, f"test{idx}.txt")
+        # print snippets of the message
+        print(f"{response['snippet']}\n")
 
         if mime_type in mime_types:
             for p in response["payload"]["parts"]:
@@ -62,6 +80,8 @@ def main():
 
         # this is when the message is not multipart
         else:
+            if "data" not in response["payload"]["body"]:
+                continue
             a = response["payload"]["body"]["data"]
             data = base64.urlsafe_b64decode(a).decode("utf-8")
             f = open(file_path, "a")
@@ -69,14 +89,9 @@ def main():
             f.close()
             body_count += 1
 
-    end_time = time.time()
-
-    # print the time taken to extract the text formatted as ss:ms
-    print(f"Time taken: {end_time - start_time:.2f}s")
-
     # extract text from the html files and rewrite the files with the extracted text
-    for idx in range(MAX_RESULTS):
-        file_path = os.path.join(test_directory, f"test{idx}.html")
+    for the_file in os.listdir(directory):
+        file_path = os.path.join(directory, the_file)
         with open(file_path, "r") as f:
             content = f.read()
             text = extractor.extract_text(content)
@@ -84,6 +99,11 @@ def main():
         with open(file_path, "w") as f:
             f.write(text)
             f.close()
+
+    end_time = time.time()
+
+    # print the time taken to extract the text formatted as ss:ms
+    print(f"Time taken: {end_time - start_time:.2f}s")
 
 
 if __name__ == "__main__":
