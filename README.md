@@ -8,4 +8,7 @@ Try it like so:
 python3 quickstart.py
 ```
 
-Haha just kidding, the app is still in testing mode so your Gmail account won't have access :)
+Currently my classifier is trained on my own emails and I don't want to share them, so it won't work for you. I am working on a way to train it on your own emails, but it's not ready yet.
+
+## How it works
+I use the Gmail API to get all my emails, then I use spaCy to classify them as one of "rejected", "acknowledged" or "neither". Currently the code will only output a dictionary of the email and what the model thinks it is, but I am working on a way to output it to a more usable format like JSON, so that I could turn it into an API and use it in a frontend.
