@@ -3,3 +3,6 @@ credentials.json
 token.json
 *.html
 __pycache__
+neither
+rejections
+acknowledgements
