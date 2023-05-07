@@ -1,23 +1,16 @@
 from __future__ import print_function
 
 import base64
-import os.path
-from pprint import pprint
-import time
-import subprocess
-import extractor
 import credentials
+import extractor
+import os.path
+import subprocess
 import sys
+import time
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
 
 def main():
-    # get MAX_RESULTS from the command line
     MAX_RESULTS = int(sys.argv[1])
 
     USER_ID = "me"
@@ -56,7 +49,7 @@ def main():
             .execute()
         )
         mime_type = response["payload"]["mimeType"]
-        file_path = os.path.join("test_files", f"test{idx}.html")
+        file_path = os.path.join(test_directory, f"test{idx}.html")
 
         if mime_type in mime_types:
             for p in response["payload"]["parts"]:

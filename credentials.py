@@ -1,3 +1,8 @@
+"""
+This module contains the functions that are used to get the credentials from
+the user. This is pulled straight from the Google API docs.
+"""
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
